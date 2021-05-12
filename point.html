@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+<script src='gk.js'></script>
+<script>
+let origins = []
+gk.gl( _=> {
+	_.preserve = 1
+	_.depthTest = 0
+	_.alignCenter = false
+	return () => {
+		if ( mousePressed ) {
+			origins.push(new Origin(mouseX, mouseY))
+		}
+		chunk(() => {
+			hue(0, 100,100, 2.2)
+			rect(0, 0, width, height)
+		})
+
+		origins.push(new Origin(mouseX, mouseY))
+
+		for (var i = origins.length-1; i >= 0; i--) {
+			origins[i].run()
+			if ( origins[i].done() ) {
+				origins.splice(i, 1)
+			}
+		}
+	}
+}, ready => {
+	pointSize(5)
+})
+
+class Origin {
+	constructor(x, y) {
+		this.particles = []
+		this.color = [random(360), random(100), random(100)]
+		for (var i = 0; i < 100; i++) {
+			this.particles.push(new Particle(x, y, this.color))
+		}
+	}
+	run() {
+		let gravity = vec2(0, 0.4)
+		for (var i = this.particles.length-1; i >= 0; i--) {
+			this.particles[i].applyForce(gravity)
+			this.particles[i].update()
+			this.particles[i].display()
+			if ( this.particles[i].done() ) {
+				this.particles.splice(i, 1)
+			}
+		}
+	}
+	done() {
+		return this.particles.length == 0
+	}
+}
+
+class Particle {
+	constructor(x, y, hue) {
+		this.pos = vec2(x, y)
+		this.vel = vec2(random(-1, 1), random(-1, 1))
+		this.vel.mult(random(2, 8))
+		this.acc = vec2()
+		this.lifespan = 255
+		this.hue = hue
+	}
+	applyForce(force) {
+		this.acc.add(force)
+	}
+	update() {
+		this.lifespan -= random(6, 4)
+		this.vel.add(this.acc)
+		this.vel.mult(0.98)
+		this.pos.add(this.vel)
+		this.acc.mult(0)
+	}
+	display() {
+		hue(...this.hue, this.lifespan*3)
+		point(this.pos)
+	}
+	done() {
+		return this.lifespan < 0
+	}
+}
+
+</script>
+</body>
+</html>

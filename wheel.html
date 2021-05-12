@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+<script src='gk.js'></script>
+<script>
+let wheel
+gk.gl( _=> {
+	return () => {
+		wheel.run()
+		if ( mousePressed ) {
+			wheel.aAngleUp()
+		}
+	}
+}, ready => wheel = new Wheel)
+
+class Wheel {
+	constructor() {
+		this.angle = 0
+		this.data = []
+		this.len = 5
+		let max = 100
+		for (var i = 0; i < this.len; i++) {
+			let ran = ~~random(max/10, max/2)
+			if ( i != this.len-1 ) {
+				this.data[i] = ran
+			} else {
+				this.data[i] = max
+			}
+			max -= ran
+		}
+		this.vAngle = 0
+		this.aAngle = random(PI*2)
+		this.result = 0
+	}
+	run() {
+		this.make()
+		this.update()
+		this.show()
+		let result = this.get()
+		console.log(result)
+		this.result = result
+	}
+	aAngleUp() {
+		this.aAngle += random(PI*2)
+	}
+	make() {
+		this.angle = 0
+		hue(0, 0, 0)
+		line(i=> [sin(i/360*PI*2)*100,  cos(i/360*PI*2)*100])
+		for (var i = 0; i < this.data.length; i++) {
+			let rand = random(360)
+			if ( this.result == i ) {
+				hue(this.angle/(PI*2)*360, 80, 20)
+			} else {
+				hue(this.angle/(PI*2)*360)
+			}
+			
+			this.angle += this.data[i]/100*(PI*2)
+			point({across: this.angle}, 0, 0, 0, 100)
+		}
+	}
+	update() {
+		this.vAngle += this.aAngle
+		this.vAngle *= 0.98
+	}
+	show() {
+		let color = this.getColor()/100*(PI*2)
+		chunk( () => {
+			rotate(0, 0, this.vAngle)
+			let a = vec2(-10, 0)
+			let b = vec2(80, 0)
+			let points = [a, b]
+
+			hue(color/(PI*2)*360)
+
+			rect({w: 10, z: -1}, i => points[i], points.length)
+
+			translate(b.x, b.y)
+			rotate(0, 0, PI/2)
+			rect({half: 1, z: -1}, [0, -12], [-10, 7], [10, 7])
+		} )
+		hue(0, 0, 0)
+		point(0, 0, -2, 3)
+	}
+	get() {
+		let currAngle =  map(this.vAngle%(PI*2), 0, PI*2, 0, 100) 
+		let result = 0
+		let sum = 0
+		for (var i = 0; i < this.data.length; i++) {
+			sum += this.data[i]
+			if ( currAngle < sum ) {
+				result = i
+				break
+			}
+		}
+		return i
+	}
+	getColor() {
+		let currAngle =  map(this.vAngle%(PI*2), 0, PI*2, 0, 100) 
+		let result = 0
+		let sum = 0
+		for (var i = 0; i < this.data.length; i++) {
+			sum += this.data[i]
+			if ( currAngle < sum ) {
+				sum -= this.data[i]
+				break
+			}
+		}
+		return sum
+	}
+}
+
+</script>
+</body>
+</html>
